@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import datetime
 import pandas as pd
 import os
+from pathlib import Path
 from multiprocessing.pool import Pool
 import pickle
 
@@ -210,13 +211,19 @@ historical_known_valid_inspection_ids = pd.read_csv('historical_known_valid_insp
 chunk_size = 2000
 
 ids_to_extract = potential_inspection_ids_dataframe[
-                                   potential_inspection_ids_dataframe['was_live']]['inspection_id']
+                                   potential_inspection_ids_dataframe['was_live'] &
+                                   ~potential_inspection_ids_dataframe['data_extracted']]['inspection_id']
+
+if Path('output/potential_inspection_summary_data.csv').exists():
+    potential_inspection_summary_data = pd.read_csv('output/potential_inspection_summary_data.csv')
+    potential_violation_details_data = pd.read_csv('output/potential_violation_details_data.csv')
+else:
+    potential_inspection_summary_data = pd.DataFrame()
+    potential_violation_details_data = pd.DataFrame()
 
 if len(ids_to_extract) > 0:
     chunks = [ids_to_extract[x:x + chunk_size] for x in range(0, len(ids_to_extract), chunk_size)]
     pool = Pool(7)
-    potential_inspection_summary_data = pd.DataFrame()
-    potential_violation_details_data = pd.DataFrame()
     for i, chunk in enumerate(chunks):
         print("Processing chunk " + str(i+1) + " of " + str(len(chunks)))
         results = pool.map(get_validity_data, chunk)
@@ -276,3 +283,7 @@ potential_inspection_summary_data.to_csv('output/potential_inspection_summary_da
 potential_violation_details_data = potential_violation_details_data[
     ['inspection_id', 'violation_number', 'violation_description', 'violation_text', 'dcmr_25_code']]
 potential_violation_details_data.to_csv('output/potential_violation_details_data.csv', index=False)
+
+# Update index
+potential_inspection_ids_dataframe['data_extracted'] = True
+potential_inspection_ids_dataframe.to_csv('output/potential_inspection_ids.csv', index=False)
