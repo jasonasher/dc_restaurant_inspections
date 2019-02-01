@@ -28,7 +28,7 @@ def cache_potential_inspection_data(inspection_id, verbose=False,
             return {"inspection_id": inspection_id, "was_live": True}
 
     # This has not been cached, so we will attempt to download it
-    url = "https://dc.healthinspections.us/webadmin/dhd_431/lib/mod/inspection/paper/" \
+    url = "https://dc.healthinspections.us/lib/mod/inspection/paper/" \
           "_paper_food_inspection_report.cfm?inspectionID=" + str(inspection_id) + "&wguid=1367&wgunm=sysact&wgdmn=431"
     http = urllib3.PoolManager()
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # We don't need to worry about https here
@@ -67,5 +67,5 @@ if len(ids_to_cache) > 0:
         potential_new_inspection_ids_dataframe["date_downloaded"] = time.strftime("%x")
         potential_new_inspection_ids_dataframe["data_extracted"] = False
         potential_inspection_ids_dataframe = pd.concat([potential_inspection_ids_dataframe,
-                                                        potential_new_inspection_ids_dataframe])
+                                                        potential_new_inspection_ids_dataframe], sort=True)
         potential_inspection_ids_dataframe.to_csv("output/potential_inspection_ids.csv", index=False)

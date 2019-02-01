@@ -1,4 +1,4 @@
-These scripts and data files are designed to scrape DC Department of Health restaurant inspection report data from https://dc.healthinspections.us/webadmin/dhd_431/web/index.cfm
+These scripts and data files are designed to scrape DC Department of Health restaurant inspection report data from https://dc.healthinspections.us/?a=Inspections
 
 Here is the workflow that produces files in the `output` directory:
 

@@ -7,7 +7,7 @@ from pathlib import Path
 
 driver = webdriver.Chrome()
 driver.implicitly_wait(5)
-driver.get("https://dc.healthinspections.us/webadmin/dhd_431/web/?a=Inspections")
+driver.get("https://dc.healthinspections.us/?a=Inspections")
 search_button = driver.find_element_by_name("btnSearch")
 search_button.click()
 
@@ -42,5 +42,5 @@ else:
     new_scraped_links_dataframe = scraped_links_dataframe.loc[~scraped_links_dataframe["inspection_id"].isin(
              existing_scraped_links_dataframe["inspection_id"])]
     print("Compared with existing data - found", len(new_scraped_links_dataframe), "new links.")
-    merged_scraped_links_dataframe = pd.concat([existing_scraped_links_dataframe, new_scraped_links_dataframe])
+    merged_scraped_links_dataframe = pd.concat([existing_scraped_links_dataframe, new_scraped_links_dataframe], sort=True)
     merged_scraped_links_dataframe.to_csv("output/scraped_inspection_links.csv", index=False)

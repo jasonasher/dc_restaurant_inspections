@@ -230,11 +230,11 @@ if len(ids_to_extract) > 0:
         new_potential_inspection_summary_data = pd.concat([pd.DataFrame(x['inspection_summary'], index=[i])
                                                        for i, x in enumerate(results) if x is not None])
         potential_inspection_summary_data = pd.concat([potential_inspection_summary_data,
-                                                       new_potential_inspection_summary_data])
+                                                       new_potential_inspection_summary_data], sort=True)
         new_potential_violation_details_data = pd.concat([pd.DataFrame(x['violation_details'])
                                                       for x in results if x is not None])
         potential_violation_details_data = pd.concat([potential_violation_details_data,
-                                                      new_potential_violation_details_data])
+                                                      new_potential_violation_details_data], sort=True)
 
 potential_inspection_summary_data = potential_inspection_summary_data[
     ['inspection_id',
