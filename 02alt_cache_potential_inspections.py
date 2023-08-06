@@ -48,24 +48,25 @@ def cache_potential_inspection_data(inspection_id, verbose=False,
         return {"inspection_id": inspection_id, "was_live": False}
 
 
-scraped_links_dataframe = pd.read_csv("output/scraped_inspection_links.csv")
-potential_inspection_ids_dataframe = pd.read_csv("output/potential_inspection_ids.csv")
+if __name__ == '__main__':
+    scraped_links_dataframe = pd.read_csv("output/scraped_inspection_links.csv")
+    potential_inspection_ids_dataframe = pd.read_csv("output/potential_inspection_ids.csv")
 
-max_known_id = max(scraped_links_dataframe["inspection_id"])
-ids_to_cache = [x for x in range(1, max_known_id + 1) if x not in potential_inspection_ids_dataframe["inspection_id"]]
+    max_known_id = max(scraped_links_dataframe["inspection_id"])
+    ids_to_cache = [x for x in range(1, max_known_id + 1) if x not in potential_inspection_ids_dataframe["inspection_id"]]
 
-chunk_size = 2000
+    chunk_size = 2000
 
-if len(ids_to_cache) > 0:
-    chunks = [ids_to_cache[x:x + chunk_size] for x in range(0, len(ids_to_cache), chunk_size)]
-    pool = Pool(40)
-    for i, chunk in enumerate(chunks):
-        print("Processing chunk " + str(i+1) + " of " + str(len(chunks)))
-        results = pool.map(cache_potential_inspection_data, chunk)
-        potential_new_inspection_ids_dataframe = pd.concat(
-            [pd.DataFrame(x, index=[i]) for i, x in enumerate(results)])
-        potential_new_inspection_ids_dataframe["date_downloaded"] = time.strftime("%x")
-        potential_new_inspection_ids_dataframe["data_extracted"] = False
-        potential_inspection_ids_dataframe = pd.concat([potential_inspection_ids_dataframe,
-                                                        potential_new_inspection_ids_dataframe], sort=True)
-        potential_inspection_ids_dataframe.to_csv("output/potential_inspection_ids.csv", index=False)
+    if len(ids_to_cache) > 0:
+        chunks = [ids_to_cache[x:x + chunk_size] for x in range(0, len(ids_to_cache), chunk_size)]
+        pool = Pool(40)
+        for i, chunk in enumerate(chunks):
+            print("Processing chunk " + str(i+1) + " of " + str(len(chunks)))
+            results = pool.map(cache_potential_inspection_data, chunk)
+            potential_new_inspection_ids_dataframe = pd.concat(
+                [pd.DataFrame(x, index=[i]) for i, x in enumerate(results)])
+            potential_new_inspection_ids_dataframe["date_downloaded"] = time.strftime("%x")
+            potential_new_inspection_ids_dataframe["data_extracted"] = False
+            potential_inspection_ids_dataframe = pd.concat([potential_inspection_ids_dataframe,
+                                                            potential_new_inspection_ids_dataframe], sort=True)
+            potential_inspection_ids_dataframe.to_csv("output/potential_inspection_ids.csv", index=False)

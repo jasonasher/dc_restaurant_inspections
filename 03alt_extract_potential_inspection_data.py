@@ -203,87 +203,88 @@ def get_validity_data(inspection_id,
              'violation_details': violation_details})
 
 
-potential_inspection_ids_dataframe = pd.read_csv('output/potential_inspection_ids.csv')
-scraped_inspection_links_dataframe = pd.read_csv('output/scraped_inspection_links.csv')
+if __name__ == '__main__':
+    potential_inspection_ids_dataframe = pd.read_csv('output/potential_inspection_ids.csv')
+    scraped_inspection_links_dataframe = pd.read_csv('output/scraped_inspection_links.csv')
 
-historical_known_valid_inspection_ids = pd.read_csv('historical_known_valid_inspection_ids.csv')['inspection_id']
+    historical_known_valid_inspection_ids = pd.read_csv('historical_known_valid_inspection_ids.csv')['inspection_id']
 
-chunk_size = 2000
+    chunk_size = 2000
 
-ids_to_extract = potential_inspection_ids_dataframe[
-                                   potential_inspection_ids_dataframe['was_live'] &
-                                   ~potential_inspection_ids_dataframe['data_extracted']]['inspection_id']
+    ids_to_extract = potential_inspection_ids_dataframe[
+                                       potential_inspection_ids_dataframe['was_live'] &
+                                       ~potential_inspection_ids_dataframe['data_extracted']]['inspection_id']
 
-if Path('output/potential_inspection_summary_data.csv').exists():
-    potential_inspection_summary_data = pd.read_csv('output/potential_inspection_summary_data.csv')
-    potential_violation_details_data = pd.read_csv('output/potential_violation_details_data.csv')
-else:
-    potential_inspection_summary_data = pd.DataFrame()
-    potential_violation_details_data = pd.DataFrame()
+    if Path('output/potential_inspection_summary_data.csv').exists():
+        potential_inspection_summary_data = pd.read_csv('output/potential_inspection_summary_data.csv')
+        potential_violation_details_data = pd.read_csv('output/potential_violation_details_data.csv')
+    else:
+        potential_inspection_summary_data = pd.DataFrame()
+        potential_violation_details_data = pd.DataFrame()
 
-if len(ids_to_extract) > 0:
-    chunks = [ids_to_extract[x:x + chunk_size] for x in range(0, len(ids_to_extract), chunk_size)]
-    pool = Pool(7)
-    for i, chunk in enumerate(chunks):
-        print("Processing chunk " + str(i+1) + " of " + str(len(chunks)))
-        results = pool.map(get_validity_data, chunk)
-        new_potential_inspection_summary_data = pd.concat([pd.DataFrame(x['inspection_summary'], index=[i])
-                                                       for i, x in enumerate(results) if x is not None])
-        potential_inspection_summary_data = pd.concat([potential_inspection_summary_data,
-                                                       new_potential_inspection_summary_data], sort=True)
-        new_potential_violation_details_data = pd.concat([pd.DataFrame(x['violation_details'])
-                                                      for x in results if x is not None])
-        potential_violation_details_data = pd.concat([potential_violation_details_data,
-                                                      new_potential_violation_details_data], sort=True)
+    if len(ids_to_extract) > 0:
+        chunks = [ids_to_extract[x:x + chunk_size] for x in range(0, len(ids_to_extract), chunk_size)]
+        pool = Pool(7)
+        for i, chunk in enumerate(chunks):
+            print("Processing chunk " + str(i+1) + " of " + str(len(chunks)))
+            results = pool.map(get_validity_data, chunk)
+            new_potential_inspection_summary_data = pd.concat([pd.DataFrame(x['inspection_summary'], index=[i])
+                                                           for i, x in enumerate(results) if x is not None])
+            potential_inspection_summary_data = pd.concat([potential_inspection_summary_data,
+                                                           new_potential_inspection_summary_data], sort=True)
+            new_potential_violation_details_data = pd.concat([pd.DataFrame(x['violation_details'])
+                                                          for x in results if x is not None])
+            potential_violation_details_data = pd.concat([potential_violation_details_data,
+                                                          new_potential_violation_details_data], sort=True)
 
-potential_inspection_summary_data = potential_inspection_summary_data[
-    ['inspection_id',
-     'establishment_name',
-     'address',
-     'telephone',
-     'email',
-     'inspection_date',
-     'inspection_time_in',
-     'inspection_time_out',
-     'license_holder',
-     'license_number',
-     'license_period_start',
-     'license_period_end',
-     'establishment_type',
-     'risk_category',
-     'inspection_type',
-     'total_violations',
-     'priority_violations',
-     'priority_violations_corrected_on_site',
-     'priority_violations_repeated',
-     'priority_foundation_violations',
-     'priority_foundation_violations_corrected_on_site',
-     'priority_foundation_violations_repeated',
-     'core_violations',
-     'core_violations_corrected_on_site',
-     'core_violations_repeated',
-     'critical_violations',
-     'critical_violations_corrected_on_site',
-     'critical_violations_repeated',
-     'noncritical_violations',
-     'noncritical_violations_corrected_on_site',
-     'noncritical_violations_repeated',
-     'inspector_comments',
-     'inspector_name',
-     'inspector_badge_number']]
-potential_inspection_summary_data['known_valid'] = False
-potential_inspection_summary_data.loc[
-    potential_inspection_summary_data['inspection_id'].isin(
-        scraped_inspection_links_dataframe['inspection_id']) |
-    potential_inspection_summary_data['inspection_id'].isin(
-        historical_known_valid_inspection_ids),
-    'known_valid'] = True
-potential_inspection_summary_data.to_csv('output/potential_inspection_summary_data.csv', index=False)
+    potential_inspection_summary_data = potential_inspection_summary_data[
+        ['inspection_id',
+         'establishment_name',
+         'address',
+         'telephone',
+         'email',
+         'inspection_date',
+         'inspection_time_in',
+         'inspection_time_out',
+         'license_holder',
+         'license_number',
+         'license_period_start',
+         'license_period_end',
+         'establishment_type',
+         'risk_category',
+         'inspection_type',
+         'total_violations',
+         'priority_violations',
+         'priority_violations_corrected_on_site',
+         'priority_violations_repeated',
+         'priority_foundation_violations',
+         'priority_foundation_violations_corrected_on_site',
+         'priority_foundation_violations_repeated',
+         'core_violations',
+         'core_violations_corrected_on_site',
+         'core_violations_repeated',
+         'critical_violations',
+         'critical_violations_corrected_on_site',
+         'critical_violations_repeated',
+         'noncritical_violations',
+         'noncritical_violations_corrected_on_site',
+         'noncritical_violations_repeated',
+         'inspector_comments',
+         'inspector_name',
+         'inspector_badge_number']]
+    potential_inspection_summary_data['known_valid'] = False
+    potential_inspection_summary_data.loc[
+        potential_inspection_summary_data['inspection_id'].isin(
+            scraped_inspection_links_dataframe['inspection_id']) |
+        potential_inspection_summary_data['inspection_id'].isin(
+            historical_known_valid_inspection_ids),
+        'known_valid'] = True
+    potential_inspection_summary_data.to_csv('output/potential_inspection_summary_data.csv', index=False)
 
-potential_violation_details_data = potential_violation_details_data[
-    ['inspection_id', 'violation_number', 'violation_description', 'violation_text', 'dcmr_25_code']]
-potential_violation_details_data.to_csv('output/potential_violation_details_data.csv', index=False)
+    potential_violation_details_data = potential_violation_details_data[
+        ['inspection_id', 'violation_number', 'violation_description', 'violation_text', 'dcmr_25_code']]
+    potential_violation_details_data.to_csv('output/potential_violation_details_data.csv', index=False)
 
-# Update index
-potential_inspection_ids_dataframe['data_extracted'] = True
-potential_inspection_ids_dataframe.to_csv('output/potential_inspection_ids.csv', index=False)
+    # Update index
+    potential_inspection_ids_dataframe['data_extracted'] = True
+    potential_inspection_ids_dataframe.to_csv('output/potential_inspection_ids.csv', index=False)

@@ -144,74 +144,75 @@ def scrape_inspection_data(url, verbose=False, downloaded_cache_dir="scraped_ins
             "violation_details": violation_details}
 
 
-scraped_links_dataframe = pd.read_csv("output/scraped_inspection_links.csv")
-urls_to_parse = scraped_links_dataframe[~scraped_links_dataframe["data_extracted"]]["link"]
+if __name__ == '__main__':
+    scraped_links_dataframe = pd.read_csv("output/scraped_inspection_links.csv")
+    urls_to_parse = scraped_links_dataframe[~scraped_links_dataframe["data_extracted"]]["link"]
 
-if len(urls_to_parse) > 0:
-    results = Pool(20).map(scrape_inspection_data, urls_to_parse)
+    if len(urls_to_parse) > 0:
+        results = Pool(20).map(scrape_inspection_data, urls_to_parse)
 
-    inspection_summary_data = pd.concat(
-        [pd.DataFrame(x["inspection_summary"], index=[i]) for i, x in enumerate(results)])
-    inspection_summary_data = inspection_summary_data[["inspection_id",
-                                                       "establishment_name",
-                                                       "inspection_date",
-                                                       "license_number",
-                                                       "total_violations",
-                                                       "priority_violations",
-                                                       "priority_violations_corrected_on_site",
-                                                       "priority_violations_repeated",
-                                                       "priority_foundation_violations",
-                                                       "priority_foundation_violations_corrected_on_site",
-                                                       "priority_foundation_violations_repeated",
-                                                       "core_violations",
-                                                       "core_violations_corrected_on_site",
-                                                       "core_violations_repeated",
-                                                       "critical_violations",
-                                                       "critical_violations_corrected_on_site",
-                                                       "critical_violations_repeated",
-                                                       "noncritical_violations",
-                                                       "noncritical_violations_corrected_on_site",
-                                                       "noncritical_violations_repeated",
-                                                       "inspector_comments"]]
-
-
-    def construct_details_frame_part(result_entry):
-        frame_part = pd.DataFrame(result_entry["violation_details"], columns=["violation_number", "violation_text"])
-        frame_part["inspection_id"] = result_entry["inspection_summary"]["inspection_id"]
-        return frame_part
+        inspection_summary_data = pd.concat(
+            [pd.DataFrame(x["inspection_summary"], index=[i]) for i, x in enumerate(results)])
+        inspection_summary_data = inspection_summary_data[["inspection_id",
+                                                           "establishment_name",
+                                                           "inspection_date",
+                                                           "license_number",
+                                                           "total_violations",
+                                                           "priority_violations",
+                                                           "priority_violations_corrected_on_site",
+                                                           "priority_violations_repeated",
+                                                           "priority_foundation_violations",
+                                                           "priority_foundation_violations_corrected_on_site",
+                                                           "priority_foundation_violations_repeated",
+                                                           "core_violations",
+                                                           "core_violations_corrected_on_site",
+                                                           "core_violations_repeated",
+                                                           "critical_violations",
+                                                           "critical_violations_corrected_on_site",
+                                                           "critical_violations_repeated",
+                                                           "noncritical_violations",
+                                                           "noncritical_violations_corrected_on_site",
+                                                           "noncritical_violations_repeated",
+                                                           "inspector_comments"]]
 
 
-    violations_details_data = pd.concat([construct_details_frame_part(x) for x in results])
-    violations_details_data = violations_details_data[["inspection_id", "violation_number", "violation_text"]]
-
-    # Merge and save the new data
-    def merge_and_save_new_data(data, filename):
-        if not Path(filename).exists():
-            print("Saving data.")
-            # If the saved table does not already exist, create it
-            data.to_csv(filename, index=False)
-        else:
-            print("Adding data.")
-            # Merge and save the new frame
-            existing_dataframe = pd.read_csv(filename)
-            new_dataframe = data.loc[~data["inspection_id"].isin(
-                existing_dataframe["inspection_id"])]
-            merged_dataframe = pd.concat(
-                [existing_dataframe, new_dataframe])
-            merged_dataframe.to_csv(filename, index=False)
+        def construct_details_frame_part(result_entry):
+            frame_part = pd.DataFrame(result_entry["violation_details"], columns=["violation_number", "violation_text"])
+            frame_part["inspection_id"] = result_entry["inspection_summary"]["inspection_id"]
+            return frame_part
 
 
-    print("Inspection summary data:")
-    print(inspection_summary_data)
-    merge_and_save_new_data(inspection_summary_data, "output/inspection_summary_data.csv")
+        violations_details_data = pd.concat([construct_details_frame_part(x) for x in results])
+        violations_details_data = violations_details_data[["inspection_id", "violation_number", "violation_text"]]
 
-    print("Violation details data:")
-    print(violations_details_data)
-    merge_and_save_new_data(violations_details_data, "output/violations_details_data.csv")
+        # Merge and save the new data
+        def merge_and_save_new_data(data, filename):
+            if not Path(filename).exists():
+                print("Saving data.")
+                # If the saved table does not already exist, create it
+                data.to_csv(filename, index=False)
+            else:
+                print("Adding data.")
+                # Merge and save the new frame
+                existing_dataframe = pd.read_csv(filename)
+                new_dataframe = data.loc[~data["inspection_id"].isin(
+                    existing_dataframe["inspection_id"])]
+                merged_dataframe = pd.concat(
+                    [existing_dataframe, new_dataframe])
+                merged_dataframe.to_csv(filename, index=False)
 
-    # Update index
-    scraped_links_dataframe.loc[~scraped_links_dataframe["data_extracted"], "data_extracted"] = True
-    scraped_links_dataframe.to_csv("output/scraped_inspection_links.csv", index=False)
 
-else:
-    print("All known links have already been processed")
+        print("Inspection summary data:")
+        print(inspection_summary_data)
+        merge_and_save_new_data(inspection_summary_data, "output/inspection_summary_data.csv")
+
+        print("Violation details data:")
+        print(violations_details_data)
+        merge_and_save_new_data(violations_details_data, "output/violations_details_data.csv")
+
+        # Update index
+        scraped_links_dataframe.loc[~scraped_links_dataframe["data_extracted"], "data_extracted"] = True
+        scraped_links_dataframe.to_csv("output/scraped_inspection_links.csv", index=False)
+
+    else:
+        print("All known links have already been processed")
